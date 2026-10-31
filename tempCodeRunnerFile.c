@@ -1,1 +1,2 @@
 
+    } while (resultado != 1);
