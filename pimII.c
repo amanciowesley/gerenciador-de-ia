@@ -11,52 +11,50 @@ Gerenciador de cadastro e edição de agentes de ia
 #define TAM_NOME 80
 #define TAM_SCRIPT 1000
 #define TAM_CATEGORIA 80
-#define QTD_NOTAS 1
 
 void mostrarMenu();
 void limparTela();
 void limparBuffer();
 int escolhaMenu();
-// Feito => Tony
 void mostrarSubMenu();
 int escolhaSubMenu();
-// By: Tony
-
-int lerAgente(char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd);
-void exibirAgentes(char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd);
+int lerAgente(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd, int ultimoID);
+void exibirAgentes();
 void paraMaiusculo(char *texto);
 void mostrarCadastrar();
 void terminarLinha(FILE *arquivo);
-int carregarAgentes(char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int max);
-void salvarAgentes(char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd);
+int carregarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int max);
+void salvarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd);
 
 
 int main(){
     int opcao, op;
-    //int id[QTD_MAX] = {0};
+    int id[QTD_MAX];
     char nome_agente[QTD_MAX][TAM_NOME];
     char script[QTD_MAX][TAM_SCRIPT];
     float nota[QTD_MAX];
     char categoria[QTD_MAX][TAM_CATEGORIA];
-
-    int qtd_adicionada = carregarAgentes(nome_agente, script, nota, QTD_MAX);
+    int qtd_adicionada = carregarAgentes(id, nome_agente, script, nota, QTD_MAX);
+    int ultimoID = qtd_adicionada + 1;
 
     do{
         mostrarMenu();
         opcao = escolhaMenu();
-        
 
         switch (opcao){ 
             case 1:
                 /*Cadastrar agente*/
                 mostrarCadastrar();
-                qtd_adicionada = lerAgente(nome_agente, script, nota, qtd_adicionada);
-                salvarAgentes(nome_agente, script, nota, qtd_adicionada);
+                qtd_adicionada = lerAgente(id, nome_agente, script, nota, qtd_adicionada, ultimoID);
+                ultimoID++;
+                
+                salvarAgentes(id, nome_agente, script, nota, qtd_adicionada);
                 break;
             
             case 2:
                 /* Buscar agentes */
                 mostrarSubMenu();
+                exibirAgentes();
                 op = escolhaSubMenu();
                 switch (op){
                     case 1:
@@ -202,7 +200,7 @@ int escolhaSubMenu(){
     return opc;
 }
 
-int lerAgente(char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd){
+int lerAgente(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd, int ultimo_id){
     /*
     Vincular no txt
     by: Wesley
@@ -229,26 +227,54 @@ int lerAgente(char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float not
         }
     }while(resultado != 1 || nota[qtd] < 0 || nota[qtd] >  5);
 
-    ///for (int i = 0; i < qtd; i++){
-    /*  if (id[i] == 0){    
-            id[i] = i;
-        } */
+    id[qtd] = ultimo_id;
 
     return qtd + 1;
-}
-    
+}   
 
 
-void exibirAgentes(char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd){
+void exibirAgentes(){
     /*
     Vincular no txt
     by: Wesley
     */
-    for(int i = 0; i < qtd; i++){
-        printf("Nome: %s\n", nome_agente[i]);
-        printf("Script: %s\n", script[i]);
-        printf("Nota: %.1f\n", nota[i]);
+    FILE *arquivo = fopen("agentes.txt", "r");
+    int id;
+    char nome_agente[TAM_NOME];
+    char script[TAM_SCRIPT];
+    float nota;
+    int qtd = 0;
+
+    if (arquivo == NULL){
+        printf("Nenhum agente cadastrado");
+        return;
     }
+
+    fscanf(arquivo, "%d", &qtd);
+    terminarLinha(arquivo);
+
+    for (int i = 0; i < qtd; i++){
+        fscanf(arquivo, "%d", &id);
+        terminarLinha(arquivo);
+
+        fgets(nome_agente, TAM_NOME, arquivo);
+        nome_agente[strcspn(nome_agente, "\n")] = '\0';
+
+        fgets(script, TAM_SCRIPT, arquivo);
+        script[strcspn(script, "\n")] = '\0';
+
+        fscanf(arquivo, "%f", &nota);
+        terminarLinha(arquivo);
+
+        printf("ID: %d\n", id);
+        printf("Nome: %s\n", nome_agente);
+        printf("Script: %s\n", script);
+        printf("Nota: %.2f\n", nota);
+        printf("===========================\n");
+    }
+
+    fclose(arquivo);
+
 }
 
 void paraMaiusculo(char *texto){
@@ -269,11 +295,11 @@ void mostrarCadastrar(){
 
     by: Wesley
     */
-    limparTela();
+    //limparTela();
     printf("=-=-=-=-=-=- CADASTRAR AGENTE =-=-=-=-=-=\n");
 }
 
-int carregarAgentes(char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int max){
+int carregarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int max){
     int qtd = 0; 
 
     FILE *arquivo = fopen("agentes.txt", "r");
@@ -288,15 +314,18 @@ int carregarAgentes(char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], flo
     fscanf(arquivo, "%d", &qtd);
     terminarLinha(arquivo);
 
-    for (int i = 0; i < qtd; i++){
-        /* fscanf(arquivo, "%d", &id[i]);
-        terminarLinha(arquivo); */
+    /* fscanf(arquivo, "%d", &ultimoID);
+    terminarLinha(arquivo); */
 
+    for (int i = 0; i < qtd; i++){
+        fscanf(arquivo, "%d", &id[i]);
+        terminarLinha(arquivo);
+        
         fgets(nome_agente[i], TAM_NOME, arquivo);
-        nome_agente[i][strspn(nome_agente[i], "\n")] = '\0';
+        nome_agente[i][strcspn(nome_agente[i], "\n")] = '\0';
 
         fgets(script[i], TAM_SCRIPT, arquivo);
-        script[i][strspn(script[i], "\n")] = '\0';
+        script[i][strcspn(script[i], "\n")] = '\0';
 
         fscanf(arquivo, "%f", &nota[i]);
         terminarLinha(arquivo);
@@ -311,7 +340,7 @@ void terminarLinha(FILE *arquivo){
     while((c = fgetc(arquivo)) != '\n' && c != EOF);
 }
 
-void salvarAgentes(char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd){
+void salvarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd){
     
     FILE *arquivo = fopen("agentes.txt", "w");
 
@@ -326,6 +355,7 @@ void salvarAgentes(char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], floa
 
     for (int i = 0; i < qtd; i++){
         //fprintf(arquivo, "%d\n", id[i]);
+        fprintf(arquivo, "%d\n", id[i]);
         fprintf(arquivo, "%s\n", nome_agente[i]);
         fprintf(arquivo, "%s\n", script[i]);
         fprintf(arquivo, "%.1f\n", nota[i]);

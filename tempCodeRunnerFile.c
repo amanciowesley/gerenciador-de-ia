@@ -1,2 +1,2 @@
 
-    } while (resultado != 1);
+    //e define no for até onde deve percorrer
