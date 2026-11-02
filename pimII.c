@@ -27,6 +27,9 @@ int carregarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SC
 void salvarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd, int *ultimoID);
 void exibirID(int id_de_busca);
 int buscarID();
+void mostrarMenuListar();
+void enterParaContinuar();
+void mostrarMenuListarID();
 
 
 int main(){
@@ -49,16 +52,22 @@ int main(){
                 /*Cadastrar agente*/
                 mostrarCadastrar();
                 qtd_adicionada = lerAgente(id, nome_agente, script, nota, qtd_adicionada, &ultimoID);
-                
-                
                 salvarAgentes(id, nome_agente, script, nota, qtd_adicionada, &ultimoID);
+                enterParaContinuar();
                 break;
             
             case 2:
-                /* Buscar agentes */
-                mostrarSubMenu();
-                id_busca = buscarID();
-                exibirID(id_busca);
+                /* Listar todos os agentes*/
+                mostrarMenuListar();
+                exibirAgentes();
+                enterParaContinuar();
+                break;
+
+
+                //mostrarSubMenu();
+            
+                //id_busca = buscarID();
+                //exibirID(id_busca);
                 /* exibirAgentes();
                 op = escolhaSubMenu();
                 switch (op){
@@ -81,11 +90,13 @@ int main(){
                         printf("Opcao invalida\n");
                         Sleep(1500);
                 } */
-                break;
                 
             case 3:
-                /* Cadastrar categoria */
-                printf("Opcao 3\n");
+                /* Buscar pelo ID */
+                mostrarCadastrar();
+                id_busca = buscarID();
+                exibirID(id_busca);
+                enterParaContinuar();
                 break;
 
             case 4:
@@ -104,105 +115,6 @@ int main(){
     }while (opcao != 0);
 
     return 0;
-}
-
-int escolhaMenu(){
-    /* 
-    -> Recebe o input do usuario no menu principal
-    -> Caso o dado digitado seja diferente inteiro, uma nova solicitação ocorre
-    -> É retornado no fim da função a opção digitada pelo usuario.
-
-    by: Wesley
-    */
-    int opc;
-    int resultado;
-    
-    do{
-        printf("Opcao: ");
-        resultado = scanf("%d", &opc);
-
-        if (resultado != 1){
-            printf("Opcao invalida\n");
-            limparBuffer();
-            Sleep(1000);
-            limparTela();
-            mostrarMenu();
-        }else{}
-
-    }while(resultado != 1);
-
-    limparBuffer();
-    return opc;
-}
-
-// Funções sem retorno
-void mostrarMenu(){
-    /* 
-    -> Apresenta o menu principal
-
-    by: wesley
-    */
-    //limparTela();
-    printf("=-=-=-=-=-=-= AGENTEDEX =-=-=-=-=-=-=\n");
-    printf("1 - Cadastrar agente\n");
-    printf("2 - Buscar agentes\n");
-    printf("3 - Cadastrar categoria\n");
-    printf("4 - Listar categorias\n");
-    printf("0 - Sair\n");
-}
-
-void limparTela(){
-    /* 
-    -> Limpa o terminal
-    -> O clear||cls permite que tal comando funcione tanto em windows quanto
-    em OSs diferentes.
-
-    by: wesley
-    */
-    system("clear||cls");
-}
-
-void limparBuffer(){
-    /* 
-    -> Limpa o buffer após entrada de dados
-
-    by: wesley
-    */
-    int c;
-    while((c = getchar()) != '\n' && c != EOF);
-}
-
-void mostrarSubMenu(){
-    /*
-    Menu das Categorias, feito com base no Menu principal
-    by: Tony
-    */
-    limparTela();
-    printf("=-=-=-= BUSCAR AGENTES NAS CATEGORIAS =-=-=-=\n");
-    printf("1 - Administracao\n");
-    printf("2 - Producao\n");
-    printf("3 - Cliente\n");
-    printf("0 - Voltar\n");
-}
-
-int escolhaSubMenu(){
-    int opc;
-    int resultado;
-
-    do{
-        printf("Opcao: ");
-        resultado = scanf("%d", &opc);
-
-        if (resultado != 1){
-            printf("Opcao invalida\n");
-            limparBuffer();
-            Sleep(1000);
-            mostrarSubMenu();
-        }
-    } while (resultado != 1);
-
-    limparBuffer();
-    return opc;
 }
 
 int lerAgente(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd, int *ultimoID){
@@ -238,9 +150,12 @@ int lerAgente(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT],
             limparBuffer();
         }
     }while(resultado != 1 || nota[qtd] < 0 || nota[qtd] >  5);
-
+    
+    limparBuffer();
     id[qtd] = *ultimoID;
     (*ultimoID)++; //incrementa o valor apontado pelo ponteiro e não o endereço, logica auxiliada por chatgpt
+    
+    printf(">>>>> Agente cadastrado ID #%d <<<<<\n", id[qtd]);
     return qtd + 1;
 }   
 
@@ -249,7 +164,10 @@ void salvarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCR
     /* 
     -> Resposavel por realizar o salvamento dos dados presentes nos vetores diretamente 
     em um arquivo .TXT
-    
+    -> fprintf(arquivo, "%d\n", qtd) e fprintf(arquivo, "%d\n", *ultimoID
+    gravam as duas primeiras linhas do arquivo. Elas armazenam a quantidade de agentes
+    cadastrados e o valor do ultimoID disponível que será atribuido a um agente mediante 
+    um novo cadastro.
     */
     
     //Arquivos abertos como w não necessitam do fgetc entre um scanf e um gets, pois tal recurso é usado apenas na leitura.
@@ -274,7 +192,6 @@ void salvarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCR
         }
 
     fclose(arquivo);
-
 }
 
 int carregarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int max, int *ultimoID){
@@ -283,8 +200,8 @@ int carregarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SC
     FILE *arquivo = fopen("agentes.txt", "r");
 
     if (arquivo == NULL){
-        printf("Nenhum agente cadastrado!\n");
-        *ultimoID = 1;
+        //printf("Nenhum agente cadastrado!\n");
+        *ultimoID = 1; //ID dos agentes inicia em 1
         return 0;
     }
 
@@ -331,7 +248,7 @@ void exibirAgentes(){
     FILE *arquivo = fopen("agentes.txt", "r");
 
     if (arquivo == NULL){
-        printf("Nenhum agente cadastrado");
+        printf("Nenhum agente cadastrado!\n");
         return;
     }
 
@@ -352,11 +269,11 @@ void exibirAgentes(){
         fscanf(arquivo, "%f", &nota);
         terminarLinha(arquivo);
 
-        printf("ID: %d\n", id);
+        printf("ID: #%d\n", id);
         printf("Nome: %s\n", nome_agente);
         printf("Script: %s\n", script);
         printf("Nota: %.2f\n", nota);
-        printf("===========================\n");
+        printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-==-=-=-=\n");
     }
 
     fclose(arquivo);
@@ -372,7 +289,7 @@ int buscarID(){
         resultado = scanf("%d", &id);
 
         if (resultado != 1){
-            printf("Digite um ID válido!\n");
+            printf("Digite um ID valido!\n");
             limparBuffer();
         }
 
@@ -410,12 +327,13 @@ void exibirID(int id_de_busca){
 
             fscanf(arquivo, "%f", &nota);
             terminarLinha(arquivo);
-
-            printf("ID: %d\n", id);
+            
+            printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
+            printf("ID: #%d\n", id);
             printf("Nome: %s\n", nome_agente);
             printf("Script: %s\n", script);
             printf("Nota: %.2f\n", nota);
-            printf("===========================\n");
+            printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
             break;
         }else{
             fgets(nome_agente, TAM_NOME, arquivo);
@@ -432,7 +350,131 @@ void exibirID(int id_de_busca){
     if (i == qtd){
         printf("Agente nao encontrado!\n");
     }
+}
 
+void buscarNome(){
+    
+}
+
+
+// Apresentação e interação dos MENUs
+void mostrarCadastrar(){
+    /* 
+    -> Titulo de submenu usado na tela de cadastrar agentes
+
+    by: Wesley
+    */
+    limparTela();
+    printf("=-=-=-=-=-=- CADASTRAR AGENTE =-=-=-=-=-=\n");
+}
+
+int escolhaMenu(){
+    /* 
+    -> Recebe o input do usuario no menu principal
+    -> Caso o dado digitado seja diferente inteiro, uma nova solicitação ocorre
+    -> É retornado no fim da função a opção digitada pelo usuario.
+
+    by: Wesley
+    */
+    int opc;
+    int resultado;
+    
+    do{
+        printf("Opcao: ");
+        resultado = scanf("%d", &opc);
+
+        if (resultado != 1){
+            printf("Opcao invalida\n");
+            limparBuffer();
+            Sleep(1000);
+            limparTela();
+            mostrarMenu();
+        }else{}
+
+    }while(resultado != 1);
+
+    limparBuffer();
+    return opc;
+}
+
+void mostrarSubMenu(){
+    /*
+    Menu das Categorias, feito com base no Menu principal
+    by: Tony
+    */
+    limparTela();
+    printf("=-=-=-= BUSCAR AGENTES NAS CATEGORIAS =-=-=-=\n");
+    printf("1 - Administracao\n");
+    printf("2 - Producao\n");
+    printf("3 - Cliente\n");
+    printf("0 - Voltar\n");
+}
+
+int escolhaSubMenu(){
+    int opc;
+    int resultado;
+
+    do{
+        printf("Opcao: ");
+        resultado = scanf("%d", &opc);
+
+        if (resultado != 1){
+            printf("Opcao invalida\n");
+            limparBuffer();
+            Sleep(1000);
+            mostrarSubMenu();
+        }
+    } while (resultado != 1);
+
+    limparBuffer();
+    return opc;
+}
+
+void mostrarMenu(){
+    /* 
+    -> Apresenta o menu principal
+
+    by: wesley
+    */
+    //limparTela();
+    printf("=-=-=-=-=-=-=-=-=-=-= AGENTEDEX -=-==-=-=-=-=-=-=\n");
+    printf("1 - Cadastrar agente\n");
+    printf("2 - Listar todos os agentes\n");
+    printf("3 - Buscar pelo ID\n");
+    printf("4 - Buscar pelo Nome\n");
+    printf("0 - Sair\n");
+}
+
+void mostrarMenuListar(){
+    limparTela();
+    printf("=-=-=-=-=-=-= LISTAR TODOS OS AGENTES =-=-=-=-=-=\n");
+}
+
+void mostrarMenuListarID(){
+    limparTela();
+    printf("=-=-=-=-=-=-=-=-=- BUSCAR PELO ID -=-==-=-=-=-=-=\n");
+}
+
+// Funções de auxilio
+void limparTela(){
+    /* 
+    -> Limpa o terminal
+    -> O clear||cls permite que tal comando funcione tanto em windows quanto
+    em OSs diferentes.
+
+    by: wesley
+    */
+    system("clear||cls");
+}
+
+void limparBuffer(){
+    /* 
+    -> Limpa o buffer após entrada de dados
+
+    by: wesley
+    */
+    int c;
+    while((c = getchar()) != '\n' && c != EOF);
 }
 
 void paraMaiusculo(char *texto){
@@ -447,17 +489,19 @@ void paraMaiusculo(char *texto){
     }
 }
 
-void mostrarCadastrar(){
-    /* 
-    -> Titulo de submenu usado na tela de cadastrar agentes
-
-    by: Wesley
-    */
-    //limparTela();
-    printf("=-=-=-=-=-=- CADASTRAR AGENTE =-=-=-=-=-=\n");
-}
-
 void terminarLinha(FILE *arquivo){
     int c;
     while((c = fgetc(arquivo)) != '\n' && c != EOF);
+}
+
+void enterParaContinuar(){
+    /* 
+    -> Ao pressionar a teclar ENTER a tela é limpa e retornar o menu principal
+    
+    OBS: código do retirado do stackoverflow
+    */
+    printf("Pressione enter para continuar...\n");
+    char enter = 0;
+    while (enter != '\r' && enter != '\n') { enter = getchar(); }
+    limparTela();
 }
