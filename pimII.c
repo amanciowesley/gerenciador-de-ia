@@ -25,7 +25,7 @@ void mostrarCadastrar();
 void terminarLinha(FILE *arquivo);
 int carregarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int max, int *ultimoID);
 void salvarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd, int *ultimoID);
-void exibirID(int id_de_busca);
+int exibirID(int id_de_busca);
 int buscarID();
 void mostrarMenuListar();
 void enterParaContinuar();
@@ -33,10 +33,12 @@ void mostrarMenuListarID();
 void mostrarMenuListarNome();
 void buscarNome(char *nome_busca);
 void exibirNome(char *nome);
+int mostrarMenuEdicao();
+void editarAgente(int id_busca, int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd);
 
 
 int main(){
-    int opcao, op;
+    int opcao_menu, opcao_edicao;
     int id[QTD_MAX];
     char nome_agente[QTD_MAX][TAM_NOME];
     char script[QTD_MAX][TAM_SCRIPT];
@@ -49,9 +51,9 @@ int main(){
 
     do{
         mostrarMenu();
-        opcao = escolhaMenu();
+        opcao_menu = escolhaMenu();
 
-        switch (opcao){ 
+        switch (opcao_menu){ 
             case 1:
                 /*Cadastrar agente*/
                 mostrarCadastrar();
@@ -67,46 +69,34 @@ int main(){
                 enterParaContinuar();
                 break;
 
-
-                //mostrarSubMenu();
-            
-                //id_busca = buscarID();
-                //exibirID(id_busca);
-                /* exibirAgentes();
-                op = escolhaSubMenu();
-                switch (op){
-                    case 1:
-                        printf("Agente ADM IA\n");
-                        Sleep(1500);
-                        break;
-                    case 2:
-                        printf("Agente Producao IA\n");
-                        Sleep(1500);
-                        break;
-                    case 3:
-                        printf("Agente Cliente IA\n");
-                        Sleep(1500);
-                        break;
-                    case 0:
-                        break;
-                    
-                    default: 
-                        printf("Opcao invalida\n");
-                        Sleep(1500);
-                } */
-                
             case 3:
                 /* Buscar pelo ID */
-                mostrarCadastrar();
+                mostrarMenuListarID();
                 id_busca = buscarID();
-                exibirID(id_busca);
-                enterParaContinuar();
+                id_busca = exibirID(id_busca);
+
+                if (id_busca != 0){
+                    opcao_edicao = mostrarMenuEdicao();
+
+                    if (opcao_edicao == 1){
+                    editarAgente(id_busca, id, nome_agente, script, nota, qtd_adicionada);
+                    salvarAgentes(id, nome_agente, script, nota, qtd_adicionada, &ultimoID);
+                    printf("Alteracoes salvas!\n");
+                    enterParaContinuar();
+
+                    }else if(opcao_edicao == 2){
+                        /* Excluir agente */
+
+                    }else{
+                        enterParaContinuar();
+                    }
+                }
                 break;
 
             case 4:
                 /* Buscar pelo nome */
                 mostrarMenuListarNome();
-                buscarNome(nome_busca); //altera a varial nome_busca através de um ponteiro
+                buscarNome(nome_busca);                                                                                         //altera a varial nome_busca através de um ponteiro
                 exibirNome(nome_busca);
                 enterParaContinuar();
                 break;
@@ -119,11 +109,12 @@ int main(){
             default:
                 continue;
             }
-    }while (opcao != 0);
+    }while (opcao_menu != 0);
 
     return 0;
 }
 
+//Controle de agentes
 int lerAgente(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd, int *ultimoID){
     /*
     Responsável por cadastrar um novo agente, lendo seu nome, script e nota diretamente do input do user
@@ -226,7 +217,7 @@ int carregarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SC
         
         fgets(nome_agente[i], TAM_NOME, arquivo);
         nome_agente[i][strcspn(nome_agente[i], "\n")] = '\0';
-       
+
         fgets(script[i], TAM_SCRIPT, arquivo);
         script[i][strcspn(script[i], "\n")] = '\0';
 
@@ -305,7 +296,7 @@ int buscarID(){
     return id;
 }
 
-void exibirID(int id_de_busca){
+int exibirID(int id_de_busca){
     FILE *arquivo = fopen("agentes.txt", "r");
 
     int id;
@@ -319,6 +310,11 @@ void exibirID(int id_de_busca){
     //foi usado uma variavel i separado, pois há a necessidade acessar seu valor
     //na verificação if (i == qtd) que esta fora do escopo do for, caso o a gente não seja encontrado
 
+
+    if (arquivo == NULL){
+        printf("Nenhum agente cadastrado");
+        return 0;
+    }
 
     fscanf(arquivo, "%d", &qtd);
     fscanf(arquivo, "%d", &ultimoID);
@@ -344,7 +340,10 @@ void exibirID(int id_de_busca){
             printf("Script: %s\n", script);
             printf("Nota: %.2f\n", nota);
             printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
-            break;
+            
+            fclose(arquivo);
+            return id;
+
         }else{
             //Mesmo quando não encontrado o resto dos dados do arquivo devem ser lidos
             fgets(nome_agente, TAM_NOME, arquivo);
@@ -367,6 +366,7 @@ void exibirID(int id_de_busca){
         printf("Agente nao encontrado!\n");
     }
     fclose(arquivo);
+    return 0;
 }
 
 void buscarNome(char *nome){
@@ -430,6 +430,64 @@ void exibirNome(char *nome){
     }
 
     fclose(arquivo);
+}
+
+void editarAgente(int id_busca, int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd){
+    int opcao;
+    int resultado;
+
+    printf("\n");
+    printf("Deseja editar:\n");
+    printf("1 - Nome\n2 - Script\n3 - Nota\n");
+    
+    do{
+        printf("Opcao: ");
+        resultado = scanf("%d", &opcao);
+
+        if (resultado != 1 || opcao < 1 || opcao > 3){
+            printf("Digite uma opcao valida!\n");
+            limparBuffer();
+        }
+    } while (resultado != 1 || opcao < 1 || opcao > 3);
+    limparBuffer();
+
+    for (int i = 0; i < qtd; i++){
+
+        if (id[i] == id_busca){
+
+            switch (opcao){
+                case 1:
+                    printf("Novo nome (evite espacos antes ou depois do nome): ");
+                    fgets(nome_agente[i], TAM_NOME, stdin);
+                    nome_agente[i][strcspn(nome_agente[i], "\n")] = '\0';
+                    paraMaiusculo(nome_agente[i]);
+                    break;
+                
+                case 2:
+                    printf("Novo Script: ");
+                    fgets(script[i], TAM_SCRIPT, stdin);
+                    script[i][strcspn(script[i], "\n")] = '\0';
+                    break;
+                
+                case 3:
+                    do{
+                        printf("Nova nota: ");
+                        resultado = scanf("%f", &nota[i]);
+
+                        if(resultado != 1 || nota[i] < 0 || nota[i] > 5){
+                            printf("Digite uma nota valida!\n");
+                            limparBuffer();
+                        }
+                    }while(resultado != 1 || nota[i] < 0 || nota[i] >  5);
+                    break;
+
+                default:
+                    break;
+            }
+            break; //impede que mais buscar continuem acontecendo após o agenter for localizado
+        }
+    }
+    
 }
 
 // Apresentação e interação dos MENUs
@@ -533,6 +591,26 @@ void mostrarMenuListarID(){
 void mostrarMenuListarNome(){
     limparTela();
     printf("=-=-=-=-=-=-=-=-= BUSCAR PELO NOME =-==-=-=-=-=-=\n");
+}
+
+int mostrarMenuEdicao(){
+    int opcao;
+    int resultado;
+    printf("Deseja:\n");
+    printf("1 - Editar\n2 - Excluir\n0 - Retornar ao menu\n");
+
+    do{
+        printf("Opcao: ");
+        resultado = scanf("%d", &opcao);
+
+        if (resultado != 1 || opcao < 0 || opcao > 2){
+            printf("Digite uma opcao valida!\n");
+            limparBuffer();
+        }
+    } while (resultado != 1 || opcao < 0 || opcao > 2);
+    
+    limparBuffer();
+    return opcao;
 }
 
 // Funções de auxilio
