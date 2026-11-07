@@ -6,6 +6,7 @@ Gerenciador de cadastro e edição de agentes de ia
 #include <stdlib.h> // biblioteca usada para usar a funcao de limpar tela
 #include <windows.h> // biblioteca usada para usar a função sleep na linha
 #include <ctype.h> // biblioteca usada para usar a função toupper
+#include <string.h> // biblioteca usada para usar a função strcpy (string copy)
 
 #define QTD_MAX 50
 #define TAM_NOME 80
@@ -19,22 +20,23 @@ int escolhaMenu();
 void mostrarSubMenu();
 int escolhaSubMenu();
 int lerAgente(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd, int *ultimoID);
-void exibirAgentes();
+void exibirAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd);
 void paraMaiusculo(char *texto);
 void mostrarCadastrar();
 void terminarLinha(FILE *arquivo);
 int carregarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int max, int *ultimoID);
 void salvarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd, int *ultimoID);
-int exibirID(int id_de_busca);
-int buscarID();
+int exibirID(int id_de_busca, int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd);
+int ehNumero();
 void mostrarMenuListar();
 void enterParaContinuar();
 void mostrarMenuListarID();
 void mostrarMenuListarNome();
-void buscarNome(char *nome_busca);
-int exibirNome(char *nome);
+void receberNomeDaBusca(char *nome_busca);
+int exibirNome(char *nome, int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd);
 int mostrarMenuEdicao();
-void editarAgente(int id_busca, int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd);
+void editarAgente(int id_busca, char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[]);
+int excluirAgente(int indice_agente, int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd);
 
 
 int main(){
@@ -43,11 +45,14 @@ int main(){
     char nome_agente[QTD_MAX][TAM_NOME];
     char script[QTD_MAX][TAM_SCRIPT];
     float nota[QTD_MAX];
-    char categoria[QTD_MAX][TAM_CATEGORIA];
+    //int categoria_do_agente[QTD_MAX];
+    //char categorias = {"ADMINISTRACAO", "PRODUCAO", "CLIENTE"};
     int ultimoID;
     int qtd_adicionada = carregarAgentes(id, nome_agente, script, nota, QTD_MAX, &ultimoID);
-    int id_busca;
+    int numeroDaBusca;
+    int indice_agente;
     char nome_busca[TAM_NOME];
+
 
     do{
         mostrarMenu();
@@ -65,28 +70,33 @@ int main(){
             case 2:
                 /* Listar todos os agentes*/
                 mostrarMenuListar();
-                exibirAgentes();
+                exibirAgentes(id, nome_agente, script, nota, qtd_adicionada);
                 enterParaContinuar();
                 break;
 
             case 3:
                 /* Buscar pelo ID */
                 mostrarMenuListarID();
-                id_busca = buscarID();
-                id_busca = exibirID(id_busca);
+                numeroDaBusca = ehNumero(); 
 
-                if (id_busca != 0){
+                //variavel debaixo corresponde ao retorno do indice do vetor do agente buscado (alterar nome)
+                indice_agente = exibirID(numeroDaBusca, id, nome_agente, script, nota, qtd_adicionada); //variavel numeroDaBusca guarda o valor do id retornado de exibirID
+
+                if (indice_agente != -1){
                     opcao_edicao = mostrarMenuEdicao();
 
                     if (opcao_edicao == 1){
-                    editarAgente(id_busca, id, nome_agente, script, nota, qtd_adicionada);
+                    editarAgente(indice_agente, nome_agente, script, nota);
                     salvarAgentes(id, nome_agente, script, nota, qtd_adicionada, &ultimoID);
                     printf("Alteracoes salvas!\n");
                     enterParaContinuar();
 
                     }else if(opcao_edicao == 2){
                         /* Excluir agente */
-
+                        qtd_adicionada = excluirAgente(indice_agente, id, nome_agente, script, nota, qtd_adicionada);
+                        salvarAgentes(id, nome_agente, script, nota, qtd_adicionada, &ultimoID);
+                        printf("Agente excluido com sucesso!\nAlteracoes salvas\n");
+                        enterParaContinuar();
                     }else{
                         enterParaContinuar();
                     }
@@ -96,20 +106,24 @@ int main(){
             case 4:
                 /* Buscar pelo nome */
                 mostrarMenuListarNome();
-                buscarNome(nome_busca); //altera a varial nome_busca através de um ponteiro
-                id_busca = exibirNome(nome_busca);
+                receberNomeDaBusca(nome_busca); //altera a variavel nome_busca através de um ponteiro
+                indice_agente = exibirNome(nome_busca, id, nome_agente, script, nota, qtd_adicionada); //variavel indice_agente guarda o valor do id retornado de exibirNome
 
-                if (id_busca != 0){
+                if (indice_agente != -1){
                     opcao_edicao = mostrarMenuEdicao();
 
                     if (opcao_edicao == 1){
-                    editarAgente(id_busca, id, nome_agente, script, nota, qtd_adicionada);
+                    editarAgente(indice_agente, nome_agente, script, nota);
                     salvarAgentes(id, nome_agente, script, nota, qtd_adicionada, &ultimoID);
                     printf("Alteracoes salvas!\n");
                     enterParaContinuar();
 
                     }else if(opcao_edicao == 2){
                         /* Excluir agente */
+                        excluirAgente(indice_agente, id, nome_agente, script, nota, qtd_adicionada);
+                        salvarAgentes(id, nome_agente, script, nota, qtd_adicionada, &ultimoID);
+                        printf("Agente excluido com sucesso!\nAlteracoes salvas\n");
+                        enterParaContinuar();
 
                     }else{
                         enterParaContinuar();
@@ -127,9 +141,10 @@ int main(){
                 continue;
             }
     }while (opcao_menu != 0);
-    
+
     return 0;
 }
+
 
 //Controle de agentes
 int lerAgente(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd, int *ultimoID){
@@ -189,7 +204,7 @@ void salvarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCR
 
     //Devolve NULL se não conseguir abrir, é checado senão o programa trava ao escrever
     if (arquivo == NULL){
-        printf("Erro ao abrir arquivo\n");
+        printf("Agente não cadastrado\n");
         return;
     }
 
@@ -198,8 +213,8 @@ void salvarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCR
     fprintf(arquivo, "%d\n", *ultimoID);
 
     for (int i = 0; i < qtd; i++){
-        //fprintf(arquivo, "%d\n", id[i]);
         fprintf(arquivo, "%d\n", id[i]);
+        //Vincular categoria do agente
         fprintf(arquivo, "%s\n", nome_agente[i]);
         fprintf(arquivo, "%s\n", script[i]);
         fprintf(arquivo, "%.1f\n", nota[i]);
@@ -246,55 +261,31 @@ int carregarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SC
     return qtd;
 }
 
-void exibirAgentes(){
+void exibirAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd){
     /*
     Vincular no txt
     by: Wesley
     */
+    float soma;
 
-    int id;
-    char nome_agente[TAM_NOME];
-    char script[TAM_SCRIPT];
-    float nota;
-    int qtd = 0;
-    int ultimoID;
+    if (qtd != 0){
+        for (int i = 0; i < qtd; i++){
+            printf("ID: #%d\n", id[i]);
+            printf("Nome: %s\n", nome_agente[i]);
+            printf("Script: %s\n", script[i]);
+            printf("Nota: %.2f\n", nota[i]);
+            printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-==-=-=-=\n");
+            soma += nota[i];
+        }
 
-    FILE *arquivo = fopen("agentes.txt", "r");
-
-    if (arquivo == NULL){
+    printf("Media de nota dos agentes: %.2f\n", soma / qtd);
+    }else{
         printf("Nenhum agente cadastrado!\n");
         return;
     }
-
-    fscanf(arquivo, "%d", &qtd);
-    fscanf(arquivo, "%d", &ultimoID);
-    terminarLinha(arquivo);
-
-    for (int i = 0; i < qtd; i++){
-        fscanf(arquivo, "%d", &id);
-        terminarLinha(arquivo);
-
-        fgets(nome_agente, TAM_NOME, arquivo);
-        nome_agente[strcspn(nome_agente, "\n")] = '\0';
-
-        fgets(script, TAM_SCRIPT, arquivo);
-        script[strcspn(script, "\n")] = '\0';
-
-        fscanf(arquivo, "%f", &nota);
-        terminarLinha(arquivo);
-
-        printf("ID: #%d\n", id);
-        printf("Nome: %s\n", nome_agente);
-        printf("Script: %s\n", script);
-        printf("Nota: %.2f\n", nota);
-        printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-==-=-=-=\n");
-    }
-
-    fclose(arquivo);
-
 }
 
-int buscarID(){
+int ehNumero(){
     int id;
     int resultado;
 
@@ -313,80 +304,27 @@ int buscarID(){
     return id;
 }
 
-int exibirID(int id_de_busca){
-    FILE *arquivo = fopen("agentes.txt", "r");
+int exibirID(int id_de_busca, int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd){
 
-    int id;
-    char nome_agente[TAM_NOME];
-    char script[TAM_SCRIPT];
-    float nota;
-    int qtd = 0;
-    int ultimoID;
-    int i; //variavel de controle do laço for 
+    for (int i = 0; i < qtd; i++){
 
-    //foi usado uma variavel i separado, pois há a necessidade acessar seu valor
-    //na verificação if (i == qtd) que esta fora do escopo do for, caso o a gente não seja encontrado
+        if (id[i] == id_de_busca){
 
-
-    if (arquivo == NULL){
-        printf("Nenhum agente cadastrado");
-        return 0;
-    }
-
-    fscanf(arquivo, "%d", &qtd);
-    fscanf(arquivo, "%d", &ultimoID);
-    terminarLinha(arquivo);
-
-    for (i = 0; i < qtd; i++){
-        fscanf(arquivo, "%d", &id);
-        terminarLinha(arquivo);
-
-        if (id == id_de_busca){
-            fgets(nome_agente, TAM_NOME, arquivo);
-            nome_agente[strcspn(nome_agente, "\n")] = '\0';
-
-            fgets(script, TAM_SCRIPT, arquivo);
-            script[strcspn(script, "\n")] = '\0';
-
-            fscanf(arquivo, "%f", &nota);
-            terminarLinha(arquivo);
-            
             printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
-            printf("ID: #%d\n", id);
-            printf("Nome: %s\n", nome_agente);
-            printf("Script: %s\n", script);
-            printf("Nota: %.2f\n", nota);
+            printf("ID: #%d\n", id[i]);
+            printf("Nome: %s\n", nome_agente[i]);
+            printf("Script: %s\n", script[i]);
+            printf("Nota: %.2f\n", nota[i]);
             printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
             
-            fclose(arquivo);
-            return id;
-
-        }else{
-            //Mesmo quando não encontrado o resto dos dados do arquivo devem ser lidos
-            fgets(nome_agente, TAM_NOME, arquivo);
-            nome_agente[strcspn(nome_agente, "\n")] = '\0';
-
-            fgets(script, TAM_SCRIPT, arquivo);
-            script[strcspn(script, "\n")] = '\0';
-
-            fscanf(arquivo, "%f", &nota);
-            terminarLinha(arquivo);
+            return i;
         }
     }
-    
-    if (i == qtd){
-        /*
-        ->Somente se torna verdadeira, quando o i é incrementado até se igualar a
-        quantidade cadastrada, isso indica que o laço não foi quebrado quando id 
-        foi encontrado 
-        */
-        printf("Agente nao encontrado!\n");
-    }
-    fclose(arquivo);
-    return 0;
+    printf("Agente nao encontrado!\n");
+    return -1; // retorno de -1, pois este valor não correspondo a nenhuma posição dos vetores;
 }
 
-void buscarNome(char *nome){
+void receberNomeDaBusca(char *nome){
     /* 
     Ponteiro usado, pois não é possivel retornar uma string.
     */
@@ -396,69 +334,32 @@ void buscarNome(char *nome){
     paraMaiusculo(nome);
 }
 
-int exibirNome(char *nome){
-    int id;
-    char nome_agente[TAM_NOME];
-    char script[TAM_SCRIPT];
-    float nota;
-    int qtd = 0;
-    int ultimoID;
-
-    FILE *arquivo = fopen("agentes.txt", "r");
-
-    if (arquivo == NULL){
-        printf("Agente não cadastrado");
-        return 0;
-    }
-
-    fscanf(arquivo, "%d", &qtd);
-    fscanf(arquivo, "%d", &ultimoID);
-    terminarLinha(arquivo);
+int exibirNome(char *nome, int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd){
 
     for (int i = 0; i < qtd; i++){
-        fscanf(arquivo, "%d", &id);
-        terminarLinha(arquivo);
 
-        fgets(nome_agente, TAM_NOME, arquivo);
-        nome_agente[strcspn(nome_agente, "\n")] = '\0';
-
-        if (strcmp(nome_agente, nome) == 0){
-            fgets(script, TAM_SCRIPT, arquivo);
-            script[strcspn(script, "\n")] = '\0';
-
-            fscanf(arquivo, "%f", &nota);
-            terminarLinha(arquivo);
-            
+        if (strcmp(nome, nome_agente[i]) == 0){
             printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
-            printf("ID: #%d\n", id);
-            printf("Nome: %s\n", nome_agente);
-            printf("Script: %s\n", script);
-            printf("Nota: %.2f\n", nota);
+            printf("ID: #%d\n", id[i]);
+            printf("Nome: %s\n", nome_agente[i]);
+            printf("Script: %s\n", script[i]);
+            printf("Nota: %.2f\n", nota[i]);
             printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
-            return id; //retorna a o id caso o agente é encontrado
+            return i; //retorna a o id caso o agente é encontrado
 
-        }else{
-            //Mesmo quando não encontrado o resto dos dados do arquivo devem ser lidos
-            fgets(script, TAM_SCRIPT, arquivo);
-            script[strcspn(script, "\n")] = '\0';
-
-            fscanf(arquivo, "%f", &nota);
-            terminarLinha(arquivo);
         }
-    }
+    }   
 
-    if (strcmp(nome_agente, nome) != 0){
-        printf("\nAgente nao encontrado!\n");
-        printf("Talvez tenha cadastrado com espaco nas extremidades!\n");
-    }
+    printf("\nAgente nao encontrado!\n");
+    printf("Talvez tenha cadastrado com espaco nas extremidades!\n");
 
-    fclose(arquivo);
-    return 0;
+    return -1;
 }
 
-void editarAgente(int id_busca, int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd){
+void editarAgente(int id_busca, char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[]){
     int opcao;
     int resultado;
+    
 
     printf("\n");
     printf("Deseja editar:\n");
@@ -475,43 +376,51 @@ void editarAgente(int id_busca, int id[], char nome_agente[][TAM_NOME], char scr
     } while (resultado != 1 || opcao < 1 || opcao > 3);
     limparBuffer();
 
-    for (int i = 0; i < qtd; i++){
+    switch (opcao){
+        case 1:
+            printf("Novo nome (evite espacos antes ou depois do nome): ");
+            fgets(nome_agente[id_busca], TAM_NOME, stdin);
+            nome_agente[id_busca][strcspn(nome_agente[id_busca], "\n")] = '\0';
+            paraMaiusculo(nome_agente[id_busca]);
+            break;
+        
+        case 2:
+            printf("Novo Script: ");
+            fgets(script[id_busca], TAM_SCRIPT, stdin);
+            script[id_busca][strcspn(script[id_busca], "\n")] = '\0';
+            break;
+        
+        case 3:
+            do{
+                printf("Nova nota: ");
+                resultado = scanf("%f", &nota[id_busca]);
 
-        if (id[i] == id_busca){
+                if(resultado != 1 || nota[id_busca] < 0 || nota[id_busca] > 5){
+                    printf("Digite uma nota valida!\n");
+                    limparBuffer();
+                }
+            }while(resultado != 1 || nota[id_busca] < 0 || nota[id_busca] >  5);
+            break;
 
-            switch (opcao){
-                case 1:
-                    printf("Novo nome (evite espacos antes ou depois do nome): ");
-                    fgets(nome_agente[i], TAM_NOME, stdin);
-                    nome_agente[i][strcspn(nome_agente[i], "\n")] = '\0';
-                    paraMaiusculo(nome_agente[i]);
-                    break;
-                
-                case 2:
-                    printf("Novo Script: ");
-                    fgets(script[i], TAM_SCRIPT, stdin);
-                    script[i][strcspn(script[i], "\n")] = '\0';
-                    break;
-                
-                case 3:
-                    do{
-                        printf("Nova nota: ");
-                        resultado = scanf("%f", &nota[i]);
-
-                        if(resultado != 1 || nota[i] < 0 || nota[i] > 5){
-                            printf("Digite uma nota valida!\n");
-                            limparBuffer();
-                        }
-                    }while(resultado != 1 || nota[i] < 0 || nota[i] >  5);
-                    break;
-
-                default:
-                    break;
-            }
-            break; //impede que mais buscar continuem acontecendo após o agenter for localizado
-        }
+        default:
+            break;
     }
-    
+}
+
+int excluirAgente(int indice_agente, int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd){
+    /* 
+    Na verdade não exclui, apenas desloca (sobrescreve) os dados uma posição para a esquerda.
+    */
+
+    for (int i = indice_agente; i < qtd - 1; i++ ){
+        id[i] = id[i + 1];
+        strcpy(nome_agente[i], nome_agente[i + 1]);
+        strcpy(script[i], script[i + 1]);
+        nota[i] = nota[i + 1];
+    }   
+
+    qtd--;
+    return qtd;   
 }
 
 // Apresentação e interação dos MENUs
@@ -635,7 +544,7 @@ int mostrarMenuEdicao(){
     
     limparBuffer();
     return opcao;
-}
+} 
 
 // Funções de auxilio
 void limparTela(){
