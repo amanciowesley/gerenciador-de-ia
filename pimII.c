@@ -11,47 +11,47 @@ Gerenciador de cadastro e edição de agentes de ia
 #define QTD_MAX 50
 #define TAM_NOME 80
 #define TAM_SCRIPT 1000
-#define TAM_CATEGORIA 80
 
 void mostrarMenu();
 void limparTela();
 void limparBuffer();
 int escolhaMenu();
-void mostrarSubMenu();
+void mostrarExibirCategoria();
 int escolhaSubMenu();
-int lerAgente(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd, int *ultimoID);
-void exibirAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd);
+int lerAgente(int id[], char categorias[3][20], int categoria_agente[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd, int *ultimoID);
+void exibirAgentes(int id[], int categoria_agente[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], char categorias[3][20], int qtd);
 void paraMaiusculo(char *texto);
 void mostrarCadastrar();
 void terminarLinha(FILE *arquivo);
-int carregarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int max, int *ultimoID);
-void salvarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd, int *ultimoID);
-int exibirID(int id_de_busca, int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd);
+int carregarAgentes(int id[], int categoria_agente[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int max, int *ultimoID);
+void salvarAgentes(int id[], int categoria_agente[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd, int *ultimoID);
+int exibirID(int id_de_busca, int id[], int categoria_agente[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], char categorias[3][20], int qtd);
 int ehNumero();
 void mostrarMenuListar();
 void enterParaContinuar();
 void mostrarMenuListarID();
 void mostrarMenuListarNome();
 void receberNomeDaBusca(char *nome_busca);
-int exibirNome(char *nome, int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd);
+int exibirNome(char *nome, int id[], int categoria_agente[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], char categorias[3][20], int qtd);
 int mostrarMenuEdicao();
-void editarAgente(int id_busca, char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[]);
-int excluirAgente(int indice_agente, int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd);
-
+void editarAgente(int id_busca, int categoria_agente[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], char categorias[3][20]);
+int excluirAgente(int indice_agente, int id[], int categoria_agente[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd);
+int escolherCategoria(char categoria[3][20]);
+void exibirPorCategoria(int id[], int categoria_agente[], char nome_agente[][TAM_NOME], char script [][TAM_SCRIPT], float nota[], char categorias[3][20], int qtd);
 
 int main(){
     int opcao_menu, opcao_edicao;
+    char categorias[3][20] = {"ADMINISTRACAO", "PRODUCAO", "CLIENTE"};
     int id[QTD_MAX];
+    int categoria_agente[QTD_MAX];
     char nome_agente[QTD_MAX][TAM_NOME];
     char script[QTD_MAX][TAM_SCRIPT];
     float nota[QTD_MAX];
-    //int categoria_do_agente[QTD_MAX];
-    //char categorias = {"ADMINISTRACAO", "PRODUCAO", "CLIENTE"};
     int ultimoID;
-    int qtd_adicionada = carregarAgentes(id, nome_agente, script, nota, QTD_MAX, &ultimoID);
     int numeroDaBusca;
     int indice_agente;
     char nome_busca[TAM_NOME];
+    int qtd_adicionada = carregarAgentes(id, categoria_agente, nome_agente, script, nota, QTD_MAX, &ultimoID);
 
 
     do{
@@ -62,15 +62,15 @@ int main(){
             case 1:
                 /*Cadastrar agente*/
                 mostrarCadastrar();
-                qtd_adicionada = lerAgente(id, nome_agente, script, nota, qtd_adicionada, &ultimoID);
-                salvarAgentes(id, nome_agente, script, nota, qtd_adicionada, &ultimoID);
+                qtd_adicionada = lerAgente(id, categorias, categoria_agente, nome_agente, script, nota, qtd_adicionada, &ultimoID);
+                salvarAgentes(id, categoria_agente, nome_agente, script, nota, qtd_adicionada, &ultimoID);
                 enterParaContinuar();
                 break;
             
             case 2:
                 /* Listar todos os agentes*/
                 mostrarMenuListar();
-                exibirAgentes(id, nome_agente, script, nota, qtd_adicionada);
+                exibirAgentes(id, categoria_agente, nome_agente, script, nota, categorias, qtd_adicionada);
                 enterParaContinuar();
                 break;
 
@@ -80,21 +80,22 @@ int main(){
                 numeroDaBusca = ehNumero(); 
 
                 //variavel debaixo corresponde ao retorno do indice do vetor do agente buscado (alterar nome)
-                indice_agente = exibirID(numeroDaBusca, id, nome_agente, script, nota, qtd_adicionada); //variavel numeroDaBusca guarda o valor do id retornado de exibirID
+                indice_agente = exibirID(numeroDaBusca, id, categoria_agente, nome_agente, script, nota, categorias, qtd_adicionada); //variavel numeroDaBusca guarda o valor do id retornado de exibirID
 
                 if (indice_agente != -1){
                     opcao_edicao = mostrarMenuEdicao();
 
                     if (opcao_edicao == 1){
-                    editarAgente(indice_agente, nome_agente, script, nota);
-                    salvarAgentes(id, nome_agente, script, nota, qtd_adicionada, &ultimoID);
+                    editarAgente(indice_agente, categoria_agente, nome_agente, script, nota, categorias);
+                    salvarAgentes(id, categoria_agente, nome_agente, script, nota, qtd_adicionada, &ultimoID);
                     printf("Alteracoes salvas!\n");
                     enterParaContinuar();
 
                     }else if(opcao_edicao == 2){
                         /* Excluir agente */
-                        qtd_adicionada = excluirAgente(indice_agente, id, nome_agente, script, nota, qtd_adicionada);
-                        salvarAgentes(id, nome_agente, script, nota, qtd_adicionada, &ultimoID);
+                        qtd_adicionada = excluirAgente(indice_agente, id, categoria_agente, nome_agente, script, nota, qtd_adicionada);
+                        salvarAgentes(id, categoria_agente, nome_agente, script, nota, qtd_adicionada, &ultimoID);
+                        printf("\n");
                         printf("Agente excluido com sucesso!\nAlteracoes salvas\n");
                         enterParaContinuar();
                     }else{
@@ -107,21 +108,22 @@ int main(){
                 /* Buscar pelo nome */
                 mostrarMenuListarNome();
                 receberNomeDaBusca(nome_busca); //altera a variavel nome_busca através de um ponteiro
-                indice_agente = exibirNome(nome_busca, id, nome_agente, script, nota, qtd_adicionada); //variavel indice_agente guarda o valor do id retornado de exibirNome
+                indice_agente = exibirNome(nome_busca, id, categoria_agente, nome_agente, script, nota, categorias, qtd_adicionada); //variavel indice_agente guarda o valor do id retornado de exibirNome
 
                 if (indice_agente != -1){
                     opcao_edicao = mostrarMenuEdicao();
 
                     if (opcao_edicao == 1){
-                    editarAgente(indice_agente, nome_agente, script, nota);
-                    salvarAgentes(id, nome_agente, script, nota, qtd_adicionada, &ultimoID);
+                    editarAgente(indice_agente, categoria_agente, nome_agente, script, nota, categorias);
+                    salvarAgentes(id, categoria_agente, nome_agente, script, nota, qtd_adicionada, &ultimoID);
                     printf("Alteracoes salvas!\n");
                     enterParaContinuar();
 
                     }else if(opcao_edicao == 2){
                         /* Excluir agente */
-                        excluirAgente(indice_agente, id, nome_agente, script, nota, qtd_adicionada);
-                        salvarAgentes(id, nome_agente, script, nota, qtd_adicionada, &ultimoID);
+                        excluirAgente(indice_agente, id, categoria_agente, nome_agente, script, nota, qtd_adicionada);
+                        salvarAgentes(id, categoria_agente, nome_agente, script, nota, qtd_adicionada, &ultimoID);
+                        printf("\n");
                         printf("Agente excluido com sucesso!\nAlteracoes salvas\n");
                         enterParaContinuar();
 
@@ -130,6 +132,12 @@ int main(){
                     }
                 }
 
+                break;
+
+            case 5:
+                mostrarExibirCategoria();
+                exibirPorCategoria(id, categoria_agente, nome_agente, script, nota, categorias, qtd_adicionada);
+                enterParaContinuar();
                 break;
             
             case 0:
@@ -147,7 +155,8 @@ int main(){
 
 
 //Controle de agentes
-int lerAgente(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd, int *ultimoID){
+int lerAgente(int id[], char categorias[3][20], int categoria_agente[], 
+    char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd, int *ultimoID){
     /*
     Responsável por cadastrar um novo agente, lendo seu nome, script e nota diretamente do input do user
     -> O parâmetro qtd representa a quantidade atual de agentes cadastrados e indica a próxima posição disponível nos vetores
@@ -160,6 +169,10 @@ int lerAgente(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT],
     by: Wesley
 */
     int resultado;
+    
+
+    printf("Escolha a categoria do seu agente\n");
+    categoria_agente[qtd] = escolherCategoria(categorias);
 
     printf("Nome (evite espacos antes ou depois do nome): ");
     fgets(nome_agente[qtd], TAM_NOME, stdin);
@@ -189,7 +202,40 @@ int lerAgente(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT],
     return qtd + 1;
 }   
 
-void salvarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd, int *ultimoID){
+int escolherCategoria(char categoria[3][20]){
+    /* 
+    Reponsável por retornar a categoria escolhida pelo usuario.
+    O parametro é uma matriz que contem as categorias ADMINISTRACAO (indice 0), PRODUCAO (indice 1) e CLIENTE (indice 2)
+    A escolha é feita a partir dos números dps indices e não do conteudo char de cada posição do vetor, por isso um valor inteiro é retornado
+    */
+    int opcao;
+    int resultado;
+
+    printf("Categorias: \n");
+    for (int i = 0; i < 3; i++){
+        printf("%d - %s\n", i, categoria[i]);
+    }
+
+    do {
+        printf("Opcao: ");
+        resultado = scanf("%d", &opcao);
+
+        if (resultado != 1){
+            printf("Digite um numero!\n");
+            limparBuffer();
+        }
+        else if (opcao < 0 || opcao > 2){
+            printf("Opcao invalida! Escolha entre 0 e 2.\n");
+        }
+
+    } while (resultado != 1 || opcao < 0 || opcao > 2);
+
+    printf("\n");
+    limparBuffer();
+    return opcao;
+}
+
+void salvarAgentes(int id[], int categoria_agente[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd, int *ultimoID){
     /* 
     -> Resposavel por realizar o salvamento dos dados presentes nos vetores diretamente 
     em um arquivo .TXT
@@ -214,7 +260,7 @@ void salvarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCR
 
     for (int i = 0; i < qtd; i++){
         fprintf(arquivo, "%d\n", id[i]);
-        //Vincular categoria do agente
+        fprintf(arquivo, "%d\n", categoria_agente[i]);
         fprintf(arquivo, "%s\n", nome_agente[i]);
         fprintf(arquivo, "%s\n", script[i]);
         fprintf(arquivo, "%.1f\n", nota[i]);
@@ -223,7 +269,10 @@ void salvarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCR
     fclose(arquivo);
 }
 
-int carregarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int max, int *ultimoID){
+int carregarAgentes(int id[], int categoria_agente[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int max, int *ultimoID){
+    /* 
+    Responsável por carregar os agentes salvos no arquivo agente.txt ao inicar o programa novamente garantindo a recuperação dos dados
+    */
     int qtd = 0; 
 
     FILE *arquivo = fopen("agentes.txt", "r");
@@ -240,11 +289,10 @@ int carregarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SC
     fscanf(arquivo, "%d", ultimoID);
     terminarLinha(arquivo);
 
-    /* fscanf(arquivo, "%d", &ultimoID);
-    terminarLinha(arquivo); */
-
     for (int i = 0; i < qtd; i++){
         fscanf(arquivo, "%d", &id[i]);
+
+        fscanf(arquivo, "%d", &categoria_agente[i]);
         terminarLinha(arquivo);
         
         fgets(nome_agente[i], TAM_NOME, arquivo);
@@ -261,16 +309,18 @@ int carregarAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SC
     return qtd;
 }
 
-void exibirAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd){
+void exibirAgentes(int id[], int categoria_agente[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], char categorias[3][20], int qtd){
     /*
-    Vincular no txt
-    by: Wesley
+    Função vinculada ao case 2: do menu principal. 
+    Sua responsábilidade é apresentar os dados de TODOS os agentes cadastrados e apresentar a média de nota no final.
+    Porém, a exibição só ocorre se a quantidade de agentes for diferente de 0, no caso se haver agentes cadastrados.
     */
     float soma;
 
     if (qtd != 0){
         for (int i = 0; i < qtd; i++){
             printf("ID: #%d\n", id[i]);
+            printf("Categoria: %s\n", categorias[categoria_agente[i]]);
             printf("Nome: %s\n", nome_agente[i]);
             printf("Script: %s\n", script[i]);
             printf("Nota: %.2f\n", nota[i]);
@@ -286,6 +336,11 @@ void exibirAgentes(int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCR
 }
 
 int ehNumero(){
+    /* 
+    Responsavel por retornar um número inteiro que será utilizado para que o usuario possa buscar os agentes por ID.
+    Seu nome é ehNumero, pois ao receber a entrada do usuário ela verificar se o mesmo é um número inteiro.
+    Enquanto não for a entrada é solicitada
+    */
     int id;
     int resultado;
 
@@ -304,7 +359,10 @@ int ehNumero(){
     return id;
 }
 
-int exibirID(int id_de_busca, int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd){
+int exibirID(int id_de_busca, int id[], int categoria_agente[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], char categorias[3][20], int qtd){
+    /* 
+    Busca e apresenta as informações do agente desejado através do id
+    */
 
     for (int i = 0; i < qtd; i++){
 
@@ -312,6 +370,7 @@ int exibirID(int id_de_busca, int id[], char nome_agente[][TAM_NOME], char scrip
 
             printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
             printf("ID: #%d\n", id[i]);
+            printf("Categoria: %s\n", categorias[categoria_agente[i]]);
             printf("Nome: %s\n", nome_agente[i]);
             printf("Script: %s\n", script[i]);
             printf("Nota: %.2f\n", nota[i]);
@@ -326,7 +385,8 @@ int exibirID(int id_de_busca, int id[], char nome_agente[][TAM_NOME], char scrip
 
 void receberNomeDaBusca(char *nome){
     /* 
-    Ponteiro usado, pois não é possivel retornar uma string.
+    Entrada e tratamento (deixar todos os caracteres em letra maiuscula) do nome do agente que o usuario deseja buscar
+    A função do ponteiro é acessar o endereço da variavel nome_busca na função main que é passado como parâmetro na função exibirNome.
     */
     printf("Digite o nome do agente: ");
     fgets(nome, TAM_NOME, stdin);
@@ -334,13 +394,19 @@ void receberNomeDaBusca(char *nome){
     paraMaiusculo(nome);
 }
 
-int exibirNome(char *nome, int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd){
+int exibirNome(char *nome, int id[], int categoria_agente[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], char categorias[3][20], int qtd){
+    /* 
+    Busca e apresenta as informações do agente desejado através do Nome buscado pelo usuario
+    Para que seja possivel a apresentação dos dados do agente pesquisado há a necessidade de fazer a comparação entre o nome pesquisado e o nome de cada agente
+    cadastrado
+    */
 
     for (int i = 0; i < qtd; i++){
 
         if (strcmp(nome, nome_agente[i]) == 0){
             printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
             printf("ID: #%d\n", id[i]);
+            printf("Categoria: %s\n", categorias[categoria_agente[i]]);
             printf("Nome: %s\n", nome_agente[i]);
             printf("Script: %s\n", script[i]);
             printf("Nota: %.2f\n", nota[i]);
@@ -356,50 +422,61 @@ int exibirNome(char *nome, int id[], char nome_agente[][TAM_NOME], char script[]
     return -1;
 }
 
-void editarAgente(int id_busca, char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[]){
+void editarAgente(int indice_agente, int categoria_agente[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], char categorias[3][20]){
+    /* 
+    Responsável por mostrar um menu de opção que permite editar e excluir o agente ou retornar ao menu principal.
+    O agente que sofrerá alterações é acessado a partir do seu indice que é retornado pelas funções exibirNome e exibirID
+    */
     int opcao;
     int resultado;
     
 
     printf("\n");
     printf("Deseja editar:\n");
-    printf("1 - Nome\n2 - Script\n3 - Nota\n");
+    printf("1 - Categoria\n2 - Nome\n3 - Script\n4 - Nota\n");
     
     do{
         printf("Opcao: ");
         resultado = scanf("%d", &opcao);
 
-        if (resultado != 1 || opcao < 1 || opcao > 3){
+        if (resultado != 1 || opcao < 1 || opcao > 4){
             printf("Digite uma opcao valida!\n");
             limparBuffer();
         }
-    } while (resultado != 1 || opcao < 1 || opcao > 3);
+    } while (resultado != 1 || opcao < 1 || opcao > 4);
     limparBuffer();
 
     switch (opcao){
-        case 1:
-            printf("Novo nome (evite espacos antes ou depois do nome): ");
-            fgets(nome_agente[id_busca], TAM_NOME, stdin);
-            nome_agente[id_busca][strcspn(nome_agente[id_busca], "\n")] = '\0';
-            paraMaiusculo(nome_agente[id_busca]);
+
+        case 1: 
+            printf("\n");
+            printf("Escolha a nova categoria do seu agente\n");
+            categoria_agente[indice_agente] = escolherCategoria(categorias);
             break;
-        
+
         case 2:
-            printf("Novo Script: ");
-            fgets(script[id_busca], TAM_SCRIPT, stdin);
-            script[id_busca][strcspn(script[id_busca], "\n")] = '\0';
+            printf("Novo nome (evite espacos antes ou depois do nome): ");
+            fgets(nome_agente[indice_agente], TAM_NOME, stdin);
+            nome_agente[indice_agente][strcspn(nome_agente[indice_agente], "\n")] = '\0';
+            paraMaiusculo(nome_agente[indice_agente]);
             break;
         
         case 3:
+            printf("Novo Script: ");
+            fgets(script[indice_agente], TAM_SCRIPT, stdin);
+            script[indice_agente][strcspn(script[indice_agente], "\n")] = '\0';
+            break;
+        
+        case 4:
             do{
                 printf("Nova nota: ");
-                resultado = scanf("%f", &nota[id_busca]);
+                resultado = scanf("%f", &nota[indice_agente]);
 
-                if(resultado != 1 || nota[id_busca] < 0 || nota[id_busca] > 5){
+                if(resultado != 1 || nota[indice_agente] < 0 || nota[indice_agente] > 5){
                     printf("Digite uma nota valida!\n");
                     limparBuffer();
                 }
-            }while(resultado != 1 || nota[id_busca] < 0 || nota[id_busca] >  5);
+            }while(resultado != 1 || nota[indice_agente] < 0 || nota[indice_agente] >  5);
             break;
 
         default:
@@ -407,13 +484,33 @@ void editarAgente(int id_busca, char nome_agente[][TAM_NOME], char script[][TAM_
     }
 }
 
-int excluirAgente(int indice_agente, int id[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd){
+void exibirPorCategoria(int id[], int categoria_agente[], char nome_agente[][TAM_NOME], char script [][TAM_SCRIPT], float nota[], char categorias[3][20], int qtd){
+    int opc;
+    
+    opc = escolherCategoria(categorias);
+
+    for (int i = 0; i < qtd; i++){
+        
+        if (categoria_agente[i] == opc){
+            printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-==-=-=-=\n");
+            printf("ID: #%d\n", id[i]);
+            printf("Categoria: %s\n", categorias[categoria_agente[i]]);
+            printf("Nome: %s\n", nome_agente[i]);
+            printf("Script: %s\n", script[i]);
+            printf("Nota: %.2f\n", nota[i]);
+            printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-==-=-=-=\n");
+        }
+    }
+}
+
+int excluirAgente(int indice_agente, int id[], int categoria_agente[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd){
     /* 
     Na verdade não exclui, apenas desloca (sobrescreve) os dados uma posição para a esquerda.
     */
 
     for (int i = indice_agente; i < qtd - 1; i++ ){
         id[i] = id[i + 1];
+        categoria_agente[i] = categoria_agente[i + 1];
         strcpy(nome_agente[i], nome_agente[i + 1]);
         strcpy(script[i], script[i + 1]);
         nota[i] = nota[i + 1];
@@ -463,37 +560,13 @@ int escolhaMenu(){
     return opc;
 }
 
-void mostrarSubMenu(){
+void mostrarExibirCategoria(){
     /*
     Menu das Categorias, feito com base no Menu principal
     by: Tony
     */
     limparTela();
-    printf("=-=-=-= BUSCAR AGENTES NAS CATEGORIAS =-=-=-=\n");
-    printf("1 - Administracao\n");
-    printf("2 - Producao\n");
-    printf("3 - Cliente\n");
-    printf("0 - Voltar\n");
-}
-
-int escolhaSubMenu(){
-    int opc;
-    int resultado;
-
-    do{
-        printf("Opcao: ");
-        resultado = scanf("%d", &opc);
-
-        if (resultado != 1){
-            printf("Opcao invalida\n");
-            limparBuffer();
-            Sleep(1000);
-            mostrarSubMenu();
-        }
-    } while (resultado != 1);
-
-    limparBuffer();
-    return opc;
+    printf("=-=-=-=-= BUSCAR AGENTES NAS CATEGORIAS =-=-=-=-=\n");
 }
 
 void mostrarMenu(){
@@ -508,6 +581,7 @@ void mostrarMenu(){
     printf("2 - Listar todos os agentes\n");
     printf("3 - Buscar pelo ID\n");
     printf("4 - Buscar pelo Nome\n");
+    printf("5 - Buscar por categoria\n");
     printf("0 - Sair\n");
 }
 
