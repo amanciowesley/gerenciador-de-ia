@@ -1,5 +1,6 @@
 /* 
 Gerenciador de cadastro e edição de agentes de ia
+
 */
 
 #include <stdio.h>
@@ -9,12 +10,15 @@ Gerenciador de cadastro e edição de agentes de ia
 #include <string.h> // biblioteca usada para usar a função strcpy (string copy)
 
 #define QTD_MAX 50
-#define TAM_NOME 80
-#define TAM_SCRIPT 1000
+#define LIMITE_NOME 80                  // Alteração : máximo de caracteres que o nome pode ter
+#define LIMITE_SCRIPT 1000              // Alteração : máximo de caracteres que o script pode ter
+#define TAM_NOME (LIMITE_NOME + 2)      // Alteração : limite + '\0' + 1 posição extra (explicada na função lerTexto)
+#define TAM_SCRIPT (LIMITE_SCRIPT + 2)  // Alteração : limite + '\0' + 1 posição extra (explicada na função lerTexto)
 
 void mostrarMenu();
 void limparTela();
 void limparBuffer();
+void lerTexto(char texto[], char pergunta[], char campo[], int limite); 
 int escolhaMenu();
 void mostrarExibirCategoria();
 int escolhaSubMenu();
@@ -178,10 +182,24 @@ int lerAgente(int id[], char categorias[3][20], int categoria_agente[],
     sem reutilizar IDs anteriores quando algum agente é apagado
     -> A função retorna qtd + 1, atualizando a quantidade total de agentes cadastrados
 
+    -> Alteração: se qtd já chegou em QTD_MAX (50 agentes), o cadastro é bloqueado: mostra o aviso de limite
+    atingido e retorna qtd sem alterar nada. Essa verificação vem ANTES de qualquer escrita nos vetores,
+    pois escrever na posição 50 (que não existe) corromperia a memória
+    -> Alteração: nome e script são lidos pela função lerTexto, que não aceita texto vazio nem
+    acima do limite de caracteres (LIMITE_NOME e LIMITE_SCRIPT)
+
     by: Wesley
+    Alterações by: Rafael com auxilio do Claude.
 */
     int resultado;
     
+    /*Alteração : bloqueia o cadastro quando os vetores já estão cheios*/
+    if (qtd >= QTD_MAX){
+        printf("Limite de %d agentes atingido!\n", QTD_MAX);
+        printf("Nao e possivel cadastrar novos agentes.\n");
+        return qtd;
+    }
+
     printf("Escolha a categoria do seu agente\n");
     categoria_agente[qtd] = escolherCategoria(categorias);
 
@@ -190,14 +208,12 @@ int lerAgente(int id[], char categorias[3][20], int categoria_agente[],
     }
 
 
-    printf("Nome (evite espacos antes ou depois do nome): ");
-    fgets(nome_agente[qtd], TAM_NOME, stdin);
-    nome_agente[qtd][strcspn(nome_agente[qtd], "\n")] = '\0';
+    /*Alteração : nome lido pela lerTexto (não aceita vazio nem mais de 80 caracteres que foi definido em LIMITE_NOME)*/
+    lerTexto(nome_agente[qtd], "Nome (evite espacos antes ou depois do nome): ", "Nome", LIMITE_NOME);
     paraMaiusculo(nome_agente[qtd]);
 
-    printf("Script: ");
-    fgets(script[qtd], TAM_SCRIPT, stdin);
-    script[qtd][strcspn(script[qtd], "\n")] = '\0';
+    /*Alteração: script lido pela lerTexto (não aceita vazio nem mais de 1000 caracteres que foi definido em LIMITE_SCRIPT)*/
+    lerTexto(script[qtd], "Script: ", "Script", LIMITE_SCRIPT);
 
 
     do{
@@ -332,7 +348,7 @@ void exibirAgentes(int id[], int categoria_agente[], char nome_agente[][TAM_NOME
     Sua responsábilidade é apresentar os dados de TODOS os agentes cadastrados e apresentar a média de nota no final.
     Porém, a exibição só ocorre se a quantidade de agentes for diferente de 0, no caso se haver agentes cadastrados.
     */
-    float soma;
+    float soma = 0;
 
     if (qtd != 0){
         for (int i = 0; i < qtd; i++){
@@ -341,7 +357,7 @@ void exibirAgentes(int id[], int categoria_agente[], char nome_agente[][TAM_NOME
             printf("Nome: %s\n", nome_agente[i]);
             printf("Script: %s\n", script[i]);
             printf("Nota: %.2f\n", nota[i]);
-            printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-==-=-=-=\n");
+            printf("========================================\n");
             soma += nota[i];
         }
 
@@ -385,13 +401,13 @@ int exibirID(int id_de_busca, int id[], int categoria_agente[], char nome_agente
 
         if (id[i] == id_de_busca){
 
-            printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
+            printf("========================================\n");
             printf("ID: #%d\n", id[i]);
             printf("Categoria: %s\n", categorias[categoria_agente[i]]);
             printf("Nome: %s\n", nome_agente[i]);
             printf("Script: %s\n", script[i]);
             printf("Nota: %.2f\n", nota[i]);
-            printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
+            printf("========================================\n");
             
             return i;
         }
@@ -421,13 +437,13 @@ int exibirNome(char *nome, int id[], int categoria_agente[], char nome_agente[][
     for (int i = 0; i < qtd; i++){
 
         if (strcmp(nome, nome_agente[i]) == 0){
-            printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
+            printf("========================================\n");
             printf("ID: #%d\n", id[i]);
             printf("Categoria: %s\n", categorias[categoria_agente[i]]);
             printf("Nome: %s\n", nome_agente[i]);
             printf("Script: %s\n", script[i]);
             printf("Nota: %.2f\n", nota[i]);
-            printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
+            printf("========================================\n");
             return i; //retorna a o id caso o agente é encontrado
 
         }
@@ -443,6 +459,8 @@ void editarAgente(int indice_agente, int categoria_agente[], char nome_agente[][
     /* 
     Responsável por mostrar um menu de opção que permite editar e excluir o agente ou retornar ao menu principal.
     O agente que sofrerá alterações é acessado a partir do seu indice que é retornado pelas funções exibirNome e exibirID
+    -> Alteração: ao editar o nome ou o script vale a mesma validação do cadastro (função lerTexto)
+    Alteração by: Rafael
     */
     int opcao;
     int resultado;
@@ -472,16 +490,14 @@ void editarAgente(int indice_agente, int categoria_agente[], char nome_agente[][
             break;
 
         case 2:
-            printf("Novo nome (evite espacos antes ou depois do nome): ");
-            fgets(nome_agente[indice_agente], TAM_NOME, stdin);
-            nome_agente[indice_agente][strcspn(nome_agente[indice_agente], "\n")] = '\0';
+            /*Alteração: mesma validação do cadastro, assim não dá para burlar a regra editando depois*/
+            lerTexto(nome_agente[indice_agente], "Novo nome (evite espacos antes ou depois do nome): ", "Nome", LIMITE_NOME);
             paraMaiusculo(nome_agente[indice_agente]);
             break;
         
         case 3:
-            printf("Novo Script: ");
-            fgets(script[indice_agente], TAM_SCRIPT, stdin);
-            script[indice_agente][strcspn(script[indice_agente], "\n")] = '\0';
+            /*Alteração: mesma validação do cadastro*/
+            lerTexto(script[indice_agente], "Novo Script: ", "Script", LIMITE_SCRIPT);
             break;
         
         case 4:
@@ -509,13 +525,13 @@ void exibirPorCategoria(int id[], int categoria_agente[], char nome_agente[][TAM
     for (int i = 0; i < qtd; i++){
         
         if (categoria_agente[i] == opc){
-            printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-==-=-=-=\n");
+            printf("========================================\n");
             printf("ID: #%d\n", id[i]);
             printf("Categoria: %s\n", categorias[categoria_agente[i]]);
             printf("Nome: %s\n", nome_agente[i]);
             printf("Script: %s\n", script[i]);
             printf("Nota: %.2f\n", nota[i]);
-            printf("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-==-=-=-=\n");
+            printf("========================================\n");
         }
     }
 }
@@ -545,7 +561,7 @@ void mostrarCadastrar(){
     by: Wesley
     */
     limparTela();
-    printf("=-=-=-=-=-=- CADASTRAR AGENTE =-=-=-=-=-=\n");
+    printf("========================================\n            CADASTRAR AGENTE\n========================================\n");
 }
 
 int escolhaMenu(){
@@ -583,7 +599,7 @@ void mostrarExibirCategoria(){
     by: Tony
     */
     limparTela();
-    printf("=-=-=-=-= BUSCAR AGENTES NAS CATEGORIAS =-=-=-=-=\n");
+    printf("========================================\n     BUSCAR AGENTES NAS CATEGORIAS\n========================================\n");
 }
 
 void mostrarMenu(){
@@ -593,7 +609,7 @@ void mostrarMenu(){
     by: wesley
     */
     //limparTela();
-    printf("=-=-=-=-=-=-=-=-=-=-= AGENTEDEX -=-==-=-=-=-=-=-=\n");
+    printf("========================================\n               AgenteDex\n========================================\n");
     printf("1 - Cadastrar agente\n");
     printf("2 - Listar todos os agentes\n");
     printf("3 - Buscar pelo ID\n");
@@ -604,17 +620,17 @@ void mostrarMenu(){
 
 void mostrarMenuListar(){
     limparTela();
-    printf("=-=-=-=-=-=-= LISTAR TODOS OS AGENTES =-=-=-=-=-=\n");
+    printf("========================================\n        LISTAR TODOS OS AGENTES\n========================================\n");
 }
 
 void mostrarMenuListarID(){
     limparTela();
-    printf("=-=-=-=-=-=-=-=-=- BUSCAR PELO ID -=-==-=-=-=-=-=\n");
+    printf("========================================\n             BUSCAR PELO ID\n========================================\n");
 }
 
 void mostrarMenuListarNome(){
     limparTela();
-    printf("=-=-=-=-=-=-=-=-= BUSCAR PELO NOME =-==-=-=-=-=-=\n");
+    printf("========================================\n            BUSCAR PELO NOME\n========================================\n");
 }
 
 int mostrarMenuEdicao(){
@@ -657,6 +673,43 @@ void limparBuffer(){
     */
     int c;
     while((c = getchar()) != '\n' && c != EOF);
+}
+
+void lerTexto(char texto[], char pergunta[], char campo[], int limite){
+    /* 
+    Essa função serve para ler textos como nome ou script e verificar se oque foi digitado tá certo,
+    o texto não pode ficar vazio e não pode ultrapassar o limite de caracteres definido.
+    -> O parâmetro pergunta mostra oque que o usuario precisa digitar
+    -> O parâmetro campo é usado para mostrar o nome do campo caso aconteça algum erro
+    o limite + 2 é usado para conseguir identificar quando o usuario digita mais caracteres que o permitido
+    uma posição é pro '\0' e a outra pra verificar se passou do limite.
+    O strcspn é usado pra encontrar o ENTER e descobrir o tamanho do texto digitado. (Se não achar, usa o limparBuffer pra limpar 
+    oque sobrou no teclado)
+    
+    do while pra continuar pedindo o texto enquanto ele estiver vazio.
+
+    by: Rafael com auxilio do Claude
+    */
+    int tamanho;
+
+    do{
+        printf("%s", pergunta);
+        fgets(texto, limite + 2, stdin);
+
+        tamanho = strcspn(texto, "\n"); //posição do '\n' = quantidade de caracteres digitados
+
+        if (texto[tamanho] == '\0'){
+            limparBuffer(); //não achou o '\n': a linha não coube no vetor e sobrou texto no teclado
+        }
+        texto[tamanho] = '\0'; //retira o '\n' (ou continua '\0' se ele não existia)
+
+        if (tamanho == 0){
+            printf("%s nao pode ficar vazio!\n", campo);
+        }else if (tamanho > limite){
+            printf("%s nao pode ter mais de %d caracteres!\n", campo, limite);
+        }
+
+    }while (tamanho == 0 || tamanho > limite);
 }
 
 void paraMaiusculo(char *texto){
