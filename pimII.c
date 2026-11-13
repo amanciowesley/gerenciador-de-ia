@@ -39,6 +39,11 @@ int excluirAgente(int indice_agente, int id[], int categoria_agente[], char nome
 int escolherCategoria(char categoria[3][20]);
 void exibirPorCategoria(int id[], int categoria_agente[], char nome_agente[][TAM_NOME], char script [][TAM_SCRIPT], float nota[], char categorias[3][20], int qtd);
 
+void exibirTermo();
+int verificarTermo();
+int aceitarTermo();
+
+
 int main(){
     int opcao_menu, opcao_edicao;
     char categorias[3][20] = {"ADMINISTRACAO", "PRODUCAO", "CLIENTE"};
@@ -54,7 +59,14 @@ int main(){
     int qtd_adicionada = carregarAgentes(id, categoria_agente, nome_agente, script, nota, QTD_MAX, &ultimoID);
 
 
+    if (verificarTermo() == 0){
+        printf("Termos nao aceitos!\n");
+        printf("Encerrando...");
+        return 0;
+    }
+    
     do{
+
         mostrarMenu();
         opcao_menu = escolhaMenu();
 
@@ -77,7 +89,7 @@ int main(){
             case 3:
                 /* Buscar pelo ID */
                 mostrarMenuListarID();
-                numeroDaBusca = ehNumero(); 
+                numeroDaBusca = ehNumero();
 
                 //variavel debaixo corresponde ao retorno do indice do vetor do agente buscado (alterar nome)
                 indice_agente = exibirID(numeroDaBusca, id, categoria_agente, nome_agente, script, nota, categorias, qtd_adicionada); //variavel numeroDaBusca guarda o valor do id retornado de exibirID
@@ -170,9 +182,13 @@ int lerAgente(int id[], char categorias[3][20], int categoria_agente[],
 */
     int resultado;
     
-
     printf("Escolha a categoria do seu agente\n");
     categoria_agente[qtd] = escolherCategoria(categorias);
+
+    if (categoria_agente[qtd] == 3){
+        return qtd;
+    }
+
 
     printf("Nome (evite espacos antes ou depois do nome): ");
     fgets(nome_agente[qtd], TAM_NOME, stdin);
@@ -215,6 +231,7 @@ int escolherCategoria(char categoria[3][20]){
     for (int i = 0; i < 3; i++){
         printf("%d - %s\n", i, categoria[i]);
     }
+    printf("3 - Voltar ao menu\n");
 
     do {
         printf("Opcao: ");
@@ -224,11 +241,11 @@ int escolherCategoria(char categoria[3][20]){
             printf("Digite um numero!\n");
             limparBuffer();
         }
-        else if (opcao < 0 || opcao > 2){
-            printf("Opcao invalida! Escolha entre 0 e 2.\n");
+        else if (opcao < 0 || opcao > 3){
+            printf("Opcao invalida! Escolha entre 0 e 3.\n");
         }
 
-    } while (resultado != 1 || opcao < 0 || opcao > 2);
+    } while (resultado != 1 || opcao < 0 || opcao > 3);
 
     printf("\n");
     limparBuffer();
@@ -669,4 +686,95 @@ void enterParaContinuar(){
     char enter = 0;
     while (enter != '\r' && enter != '\n') { enter = getchar(); }
     limparTela();
+}
+
+void exibirTermo(){
+    printf("==================================================\n");
+    printf("            TERMO DE CONDICOES DE USO\n");
+    printf("==================================================\n\n");
+
+    printf("1. OBJETO\n");
+    printf("Este software permite cadastrar, consultar e gerenciar\n");
+    printf("agentes de inteligencia artificial, informando nome,\n");
+    printf("script e nota.\n\n");
+
+    printf("2. RESPONSABILIDADE PELO CONTEUDO\n");
+    printf("O usuario e o unico responsavel por todo conteudo que\n");
+    printf("inserir no software (nome, script e nota).\n\n");
+
+    printf("3. CONDUTAS PROIBIDAS\n");
+    printf("E proibido cadastrar agentes cujo nome ou script:\n");
+    printf("- tenham finalidade ilegal ou incentivem crimes;\n");
+    printf("- violem direitos humanos, promovendo discriminacao,\n");
+    printf("  odio, perseguicao ou violencia contra pessoas ou grupos;\n");
+    printf("- promovam assedio, ameaca, difamacao ou fraude;\n");
+    printf("- envolvam exploracao ou abuso de criancas e adolescentes;\n");
+    printf("- violem direitos de terceiros, como privacidade e\n");
+    printf("  propriedade intelectual.\n\n");
+
+    printf("4. DECLARACAO DE CIENCIA\n");
+    printf("Ao utilizar este software, o usuario declara que leu e\n");
+    printf("compreendeu estas condicoes, esta ciente de que inserir\n");
+    printf("conteudo ilegal ou que viole direitos humanos e proibido\n");
+    printf("e assume as consequencias do conteudo que cadastrar,\n");
+    printf("incluindo responsabilizacao civil, administrativa e\n");
+    printf("penal, conforme a legislacao aplicavel.\n\n");
+
+    printf("5. CONSEQUENCIAS\n");
+    printf("Em caso de violacao, o conteudo infrator podera ser\n");
+    printf("removido e as autoridades competentes poderao ser\n");
+    printf("acionadas quando houver obrigacao legal.\n\n");
+
+    printf("6. LIMITACAO DE RESPONSABILIDADE\n");
+    printf("O software e oferecido \"como esta\". Os desenvolvedores\n");
+    printf("nao respondem por danos decorrentes do conteudo inserido\n");
+    printf("pelos usuarios.\n");
+    printf("\n");
+    printf("Digite\n[1] ACEITAR\n[0] RECUSAR\n");
+    printf("==================================================\n");
+    
+}
+
+int verificarTermo(){
+/* --- Verifica se ja existe o arquivo agentes.txt, se ele ja existe quer dizer q o cliente ja aceitou o termo de uso.
+*/  
+    int opcao;
+    FILE *arquivo = fopen("termo.txt", "r");
+
+    if (arquivo != NULL){
+        fclose(arquivo);
+        return 1;
+        }
+
+    limparTela();
+    exibirTermo();
+    opcao = aceitarTermo();
+
+    if (opcao == 1){
+        arquivo = fopen("termo.txt", "w");
+        fprintf(arquivo, "TERMO DE CONDICOES DE USO ACEITO.\n");
+        fclose(arquivo);
+        limparTela();
+        return 1;
+        }
+    return 0;
+}
+
+int aceitarTermo(){
+
+    int opcao;
+    int resultado;
+
+    do{
+    printf("Opcao >>> ");
+    resultado = scanf("%d", &opcao);
+    limparBuffer();
+
+    if (resultado != 1 || opcao < 0 || opcao > 1){
+        printf("Opcao invalida\n");
+    }
+
+    } while (resultado != 1 || opcao < 0 || opcao > 1);
+
+    return opcao;
 }
