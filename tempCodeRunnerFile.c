@@ -1,1 +1,1 @@
-
+return qtd + 1;

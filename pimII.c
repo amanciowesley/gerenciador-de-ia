@@ -22,7 +22,7 @@ void lerTexto(char texto[], char pergunta[], char campo[], int limite);
 int escolhaMenu();
 void mostrarExibirCategoria();
 int escolhaSubMenu();
-int lerAgente(int id[], char categorias[3][20], int categoria_agente[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd, int *ultimoID);
+int cadastrarAgente(int id[], char categorias[3][20], int categoria_agente[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd, int *ultimoID);
 void exibirAgentes(int id[], int categoria_agente[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], char categorias[3][20], int qtd);
 void paraMaiusculo(char *texto);
 void mostrarCadastrar();
@@ -42,7 +42,6 @@ void editarAgente(int id_busca, int categoria_agente[], char nome_agente[][TAM_N
 int excluirAgente(int indice_agente, int id[], int categoria_agente[], char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd);
 int escolherCategoria(char categoria[3][20]);
 void exibirPorCategoria(int id[], int categoria_agente[], char nome_agente[][TAM_NOME], char script [][TAM_SCRIPT], float nota[], char categorias[3][20], int qtd);
-
 void exibirTermo();
 int verificarTermo();
 int aceitarTermo();
@@ -78,7 +77,7 @@ int main(){
             case 1:
                 /*Cadastrar agente*/
                 mostrarCadastrar();
-                qtd_adicionada = lerAgente(id, categorias, categoria_agente, nome_agente, script, nota, qtd_adicionada, &ultimoID);
+                qtd_adicionada = cadastrarAgente(id, categorias, categoria_agente, nome_agente, script, nota, qtd_adicionada, &ultimoID);
                 salvarAgentes(id, categoria_agente, nome_agente, script, nota, qtd_adicionada, &ultimoID);
                 enterParaContinuar();
                 break;
@@ -117,6 +116,8 @@ int main(){
                     }else{
                         enterParaContinuar();
                     }
+                }else{
+                    enterParaContinuar();
                 }
                 break;
 
@@ -146,6 +147,8 @@ int main(){
                     }else{
                         enterParaContinuar();
                     }
+                }else{
+                    enterParaContinuar();
                 }
 
                 break;
@@ -171,7 +174,7 @@ int main(){
 
 
 //Controle de agentes
-int lerAgente(int id[], char categorias[3][20], int categoria_agente[], 
+int cadastrarAgente(int id[], char categorias[3][20], int categoria_agente[], 
     char nome_agente[][TAM_NOME], char script[][TAM_SCRIPT], float nota[], int qtd, int *ultimoID){
     /*
     Responsável por cadastrar um novo agente, lendo seu nome, script e nota diretamente do input do user
@@ -519,6 +522,8 @@ void editarAgente(int indice_agente, int categoria_agente[], char nome_agente[][
 
 void exibirPorCategoria(int id[], int categoria_agente[], char nome_agente[][TAM_NOME], char script [][TAM_SCRIPT], float nota[], char categorias[3][20], int qtd){
     int opc;
+    int cont = 0;
+    float soma;
     
     opc = escolherCategoria(categorias);
 
@@ -532,7 +537,16 @@ void exibirPorCategoria(int id[], int categoria_agente[], char nome_agente[][TAM
             printf("Script: %s\n", script[i]);
             printf("Nota: %.2f\n", nota[i]);
             printf("========================================\n");
+            cont++;
+            soma += nota[i];
+            
         }
+    }
+
+    if (cont > 0){
+        printf("Media de notas da categoria %s: %.2f\n", categorias[opc], soma / cont);
+    }else if (cont <= 0 && opc == 0 || opc == 1 || opc == 2){
+        printf("Nenhum agente encontrado nesta categoria\n");
     }
 }
 
@@ -690,8 +704,7 @@ void lerTexto(char texto[], char pergunta[], char campo[], int limite){
 
     by: Rafael com auxilio do Claude
     */
-    int tamanho;
-
+    int tamanho;     
     do{
         printf("%s", pergunta);
         fgets(texto, limite + 2, stdin);
