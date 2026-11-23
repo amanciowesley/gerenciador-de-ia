@@ -115,6 +115,8 @@ Atende clientes no chat e encaminha chamados.
 ## Autores
 
 - Wesley Alexandre dos Santos Amancio
+- Antonio José Araujo
+- Rafael Militão
 
 ## Licença
 
