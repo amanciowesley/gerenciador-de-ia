@@ -314,7 +314,6 @@ int carregarAgentes(int id[], int categoria_agente[], char nome_agente[][TAM_NOM
     FILE *arquivo = fopen("agentes.txt", "r");
 
     if (arquivo == NULL){
-        //printf("Nenhum agente cadastrado!\n");
         *ultimoID = 1; //ID dos agentes inicia em 1
         return 0;
     }
@@ -521,6 +520,11 @@ void editarAgente(int indice_agente, int categoria_agente[], char nome_agente[][
 }
 
 void exibirPorCategoria(int id[], int categoria_agente[], char nome_agente[][TAM_NOME], char script [][TAM_SCRIPT], float nota[], char categorias[3][20], int qtd){
+    /*
+    Exibi os Agentes pela Categoria, Administracao, Producao e Cliente.
+    Mostrando a notas Media por categoria.
+    */
+    
     int opc;
     int cont = 0;
     float soma;
@@ -648,6 +652,9 @@ void mostrarMenuListarNome(){
 }
 
 int mostrarMenuEdicao(){
+    /*
+    Mostra menu de Edicao, com as opcao de Editar e Excluir
+    */
     int opcao;
     int resultado;
     printf("Deseja:\n");
@@ -755,6 +762,9 @@ void enterParaContinuar(){
 }
 
 void exibirTermo(){
+    /*
+    Termos de uso do sistema.
+    */
     printf("==================================================\n");
     printf("            TERMO DE CONDICOES DE USO\n");
     printf("==================================================\n\n");
@@ -802,7 +812,7 @@ void exibirTermo(){
 }
 
 int verificarTermo(){
-/* --- Verifica se ja existe o arquivo agentes.txt, se ele ja existe quer dizer q o cliente ja aceitou o termo de uso.
+/* --- Verifica se ja existe o arquivo termo.txt, se ele ja existe quer dizer q o cliente ja aceitou o termo de uso.
 */  
     int opcao;
     FILE *arquivo = fopen("termo.txt", "r");
@@ -827,6 +837,9 @@ int verificarTermo(){
 }
 
 int aceitarTermo(){
+    /*
+    Verifica opcao para aceitar o termo de uso.
+    */
 
     int opcao;
     int resultado;

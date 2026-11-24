@@ -1,0 +1,17 @@
+3
+4
+1
+0
+ADM_PLUS
+E um agente de IA que auxilia no administrativo de uma empresa com pequenos recursos para Financeiro, RH, NFs, Juridico e mais.
+5.00
+2
+1
+PROD_MAX
+Agente de IA que auxilia nas redes de producao, como, Planejamento, Qualidade, Estoque entre outros.
+4.50
+3
+2
+CLIENTE_POWER
+Esse agente de IA, colabora com as Vendas, Atendimento ao Cliente, Cadastro e muito mais.
+4.00
