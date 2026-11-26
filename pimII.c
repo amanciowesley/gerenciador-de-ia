@@ -1,6 +1,5 @@
 /* 
 Gerenciador de cadastro e edição de agentes de ia
-
 */
 
 #include <stdio.h>
@@ -138,7 +137,7 @@ int main(){
 
                     }else if(opcao_edicao == 2){
                         /* Excluir agente */
-                        excluirAgente(indice_agente, id, categoria_agente, nome_agente, script, nota, qtd_adicionada);
+                        qtd_adicionada = excluirAgente(indice_agente, id, categoria_agente, nome_agente, script, nota, qtd_adicionada);
                         salvarAgentes(id, categoria_agente, nome_agente, script, nota, qtd_adicionada, &ultimoID);
                         printf("\n");
                         printf("Agente excluido com sucesso!\nAlteracoes salvas\n");
@@ -527,7 +526,7 @@ void exibirPorCategoria(int id[], int categoria_agente[], char nome_agente[][TAM
     
     int opc;
     int cont = 0;
-    float soma;
+    float soma = 0;
     
     opc = escolherCategoria(categorias);
 
